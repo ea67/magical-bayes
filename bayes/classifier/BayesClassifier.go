@@ -47,7 +47,7 @@ func (classifier *BayesClassifier) probabilityOfCategory(category string) float6
 
 //P(feature|category)
 func (classifier *BayesClassifier) probabilityOfFeatureInCategory( feature, category string) float64 {
-	return classifier.probabilityOf(feature,  classifier.Brain.FeaturesFrequencyInEachCategory[category])
+	return classifier.probabilityOf(feature,  classifier.Brain.TfIdfTempValues[category])
 }
 
 func getSampleSpaceSize(typeFrequency map[string]float64) float64 {
