@@ -5,17 +5,32 @@ import "magicalbayes/bayes/brain"
 var VERSION = "1.0.0"
 var λ = 1 //平滑因子
 
+// defaultProb is the tiny non-zero probability that a word
+// we have not seen before appears in the class.
+const defaultProb = 0.00000000001
+
+
 type BayesClassifier struct {
 	Brain *brain.BayesBrain
 }
 
+//func (classifier *BayesClassifier) probabilityOf(feature string, typesFrequency map[string]int) float64 {
+//	frequency := typesFrequency[feature]
+//	spaceSize := getSampleSpaceSize(typesFrequency)
+//	//laplace平滑校准
+//	frequency += λ
+//	spaceSize += λ * len(classifier.Brain.FeaturesFrequency) // + λ * J
+//	return float64(frequency) / float64(spaceSize)
+//}
+
 func (classifier *BayesClassifier) probabilityOf(feature string, typesFrequency map[string]int) float64 {
 	frequency := typesFrequency[feature]
 	spaceSize := getSampleSpaceSize(typesFrequency)
-	//laplace平滑校准
-	frequency += λ
-	spaceSize += λ * len(classifier.Brain.FeaturesFrequency) // + λ * J
-	return float64(frequency) / float64(spaceSize)
+	prob := float64(frequency) / float64(spaceSize)
+	if prob < defaultProb {
+		return defaultProb
+	}
+	return prob
 }
 
 //P(feature)
@@ -58,6 +73,32 @@ func (classifier *BayesClassifier) BayesProbabilityOf(category string, features 
 	return float64(P) / float64(space)
 }
 
+
+func (classifier *BayesClassifier) MolecularProbabilityOf(features ...string)  []Classification{
+	i := 0
+	list := make([]Classification, len(classifier.Brain.CategoriesFrequency))
+	for category := range classifier.Brain.CategoriesFrequency {
+		P := classifier.probabilityOfCategory(category)
+		//fmt.Println("P", P)
+		//fmt.Println("len",len(features), features)
+
+
+		for _, feature := range features {
+			inCategory := classifier.probabilityOfFeatureInCategory(feature, category)
+
+			P *= inCategory
+			//fmt.Println("P",P)
+		}
+		list[i] = Classification {
+			Probability: P,
+			Category:    category,
+			Features:    features,
+		}
+		i++
+	}
+	return list
+
+}
 
 func (classifier *BayesClassifier) ProbabilityOf(features ...string) []Classification {
 	i := 0
