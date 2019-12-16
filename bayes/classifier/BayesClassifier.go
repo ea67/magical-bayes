@@ -23,7 +23,7 @@ type BayesClassifier struct {
 //	return float64(frequency) / float64(spaceSize)
 //}
 
-func (classifier *BayesClassifier) probabilityOf(feature string, typesFrequency map[string]int) float64 {
+func (classifier *BayesClassifier) probabilityOf(feature string, typesFrequency map[string]float64) float64 {
 	frequency := typesFrequency[feature]
 	spaceSize := getSampleSpaceSize(typesFrequency)
 	prob := float64(frequency) / float64(spaceSize)
@@ -50,8 +50,8 @@ func (classifier *BayesClassifier) probabilityOfFeatureInCategory( feature, cate
 	return classifier.probabilityOf(feature,  classifier.Brain.FeaturesFrequencyInEachCategory[category])
 }
 
-func getSampleSpaceSize(typeFrequency map[string]int) int {
- 	spaceSize := 0
+func getSampleSpaceSize(typeFrequency map[string]float64) float64 {
+ 	spaceSize := float64(0)
 	for _, frequency := range typeFrequency {
 		spaceSize += frequency
 	}

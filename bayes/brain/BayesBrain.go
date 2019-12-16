@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/json-iterator/go"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 )
@@ -11,46 +12,109 @@ import (
 var VERSION = "v0.0.1"
 
 type BayesBrain struct {
-	FeaturesFrequency               map[string]int
-	CategoriesFrequency             map[string]int
-	FeaturesFrequencyInEachCategory map[string]map[string]int
-	CategoriesSummary               map[string]CategorySummary
-	LearnedDoc 						int
+	FeaturesFrequency               map[string]float64
+	CategoriesFrequency             map[string]float64
+	FeaturesFrequencyInEachCategory map[string]map[string]float64
+	CategoriesSummary               map[string]*CategorySummary
+	LearnedCount                    int
+	DidConvertTfIdf   				bool
+	TfIdfTempValues					map[string]map[string]float64
 }
 
 type CategorySummary struct {
-	Tfs map[string]float64
-	learnedCount int
+	Tfs          map[string][]float64
+	LearnedCount int
 }
 
 func NewBayesBrain() *BayesBrain{
 	 brain := new(BayesBrain)
-	 brain.FeaturesFrequency = make(map[string]int)
-	 brain.CategoriesFrequency = make(map[string]int)
-	 brain.FeaturesFrequencyInEachCategory = make(map[string]map[string]int)
+	 brain.FeaturesFrequency = make(map[string]float64)
+	 brain.CategoriesFrequency = make(map[string]float64)
+	 brain.FeaturesFrequencyInEachCategory = make(map[string]map[string]float64)
+	 brain.CategoriesSummary = make(map[string]*CategorySummary)
+	 brain.LearnedCount = 0
 	 return brain
 }
 
-func learn(featuresFrequency map[string]int,  features []string) {
+func learn(featuresFrequency map[string]float64,  features []string) {
 	for _, feature := range features {
 		featuresFrequency[feature]++
 	}
 }
 
+// TF-IDF https://en.wikipedia.org/wiki/Tf%E2%80%93idf
+func (brain *BayesBrain) applyTfIdf() {
+
+	if brain.DidConvertTfIdf {
+		panic("Cannot call applyTfIdf more than once. Reset and relearn to reconvert.")
+	}
+
+	for category := range brain.CategoriesSummary {
+		for feature := range brain.CategoriesSummary[category].Tfs {
+			tfIdfSum := float64(0)
+			for i, tf := range brain.CategoriesSummary[category].Tfs[feature] {
+				brain.CategoriesSummary[category].Tfs[feature][i] = math.Log1p(tf) * math.Log1p(float64(brain.LearnedCount)/float64(brain.CategoriesSummary[feature].LearnedCount))
+				tfIdfSum += brain.CategoriesSummary[category].Tfs[feature][i]
+			}
+			//brain.CategoriesSummary[category].t
+			brain.TfIdfTempValues[category][feature] = tfIdfSum
+		}
+
+	}
+
+
+	brain.DidConvertTfIdf = true
+}
+
 func (brain *BayesBrain) Learn(category string, features ...string) {
 	learn(brain.FeaturesFrequency, features)
 	brain.CategoriesFrequency[category]++
-	if brain.FeaturesFrequencyInEachCategory[category] == nil{
-		brain.FeaturesFrequencyInEachCategory[category] = make(map[string]int)
+	if brain.FeaturesFrequencyInEachCategory[category] == nil {
+		brain.FeaturesFrequencyInEachCategory[category] = make(map[string]float64)
 	}
 	learn(brain.FeaturesFrequencyInEachCategory[category], features)
+
+	//tf-idf
+	if brain.CategoriesSummary[category] == nil {
+		brain.CategoriesSummary[category] =  new(CategorySummary)
+	}
+	brain.CategoriesSummary[category].LearnedCount++
+
+	tfs := make(map[string]float64)
+	for _, feature := range features {
+		tfs[feature]++
+		if brain.CategoriesSummary[category].Tfs[feature] == nil {
+			brain.CategoriesSummary[category].Tfs = make(map[string][]float64)
+		}
+	}
+	featureCount := float64(len(features))
+
+
+	for feature, count := range tfs {
+
+		tfs[feature] = count / featureCount
+		// add the TF sample, after training we can get IDF values.
+		brain.CategoriesSummary[category].Tfs[feature] = append(brain.CategoriesSummary[category].Tfs[feature], tfs[feature])
+	}
+
+	brain.LearnedCount++
+
+
 }
 
-func (brain *BayesBrain)Show() {
+func (brain *BayesBrain) Show() {
 	fmt.Println("~~~~~~~~~~~ Bayes Brain " + VERSION + " ~~~~~~~~~~~")
 	fmt.Println(brain.FeaturesFrequency)
 	fmt.Println(brain.CategoriesFrequency)
 	fmt.Println(brain.FeaturesFrequencyInEachCategory)
+	fmt.Println(brain.LearnedCount)
+	fmt.Println("tf-idf")
+	categoriesSummary, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(brain.CategoriesSummary)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(categoriesSummary))
+	fmt.Println(brain.LearnedCount)
 	fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 }
 
