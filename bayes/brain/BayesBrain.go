@@ -12,9 +12,9 @@ import (
 var VERSION = "v0.0.1"
 
 type BayesBrain struct {
-	FeaturesFrequency               map[string]float64
-	CategoriesFrequency             map[string]float64
-	FeaturesFrequencyInEachCategory map[string]map[string]float64
+	FeaturesFrequency               map[string]int
+	CategoriesFrequency             map[string]int
+	FeaturesFrequencyInEachCategory map[string]map[string]int
 	CategoriesSummary               map[string]*CategorySummary
 	LearnedCount                    int
 	DidConvertTfIdf   				bool
@@ -28,15 +28,15 @@ type CategorySummary struct {
 
 func NewBayesBrain() *BayesBrain{
 	 brain := new(BayesBrain)
-	 brain.FeaturesFrequency = make(map[string]float64)
-	 brain.CategoriesFrequency = make(map[string]float64)
-	 brain.FeaturesFrequencyInEachCategory = make(map[string]map[string]float64)
+	 brain.FeaturesFrequency = make(map[string]int)
+	 brain.CategoriesFrequency = make(map[string]int)
+	 brain.FeaturesFrequencyInEachCategory = make(map[string]map[string]int)
 	 brain.CategoriesSummary = make(map[string]*CategorySummary)
 	 brain.LearnedCount = 0
 	 return brain
 }
 
-func learn(featuresFrequency map[string]float64,  features []string) {
+func learn(featuresFrequency map[string]int,  features []string) {
 	for _, feature := range features {
 		featuresFrequency[feature]++
 	}
@@ -70,7 +70,7 @@ func (brain *BayesBrain) Learn(category string, features ...string) {
 	learn(brain.FeaturesFrequency, features)
 	brain.CategoriesFrequency[category]++
 	if brain.FeaturesFrequencyInEachCategory[category] == nil {
-		brain.FeaturesFrequencyInEachCategory[category] = make(map[string]float64)
+		brain.FeaturesFrequencyInEachCategory[category] = make(map[string]int)
 	}
 	learn(brain.FeaturesFrequencyInEachCategory[category], features)
 
