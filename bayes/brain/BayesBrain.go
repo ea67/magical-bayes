@@ -53,17 +53,14 @@ func (brain *BayesBrain) ApplyTfIdf() {
 	}
 
 	for category := range brain.CategoriesSummary {
+		brain.TfIdfTempValues[category] = make(map[string]float64)
 		for feature := range brain.CategoriesSummary[category].Tfs {
 			tfIdfSum := float64(0)
 			for _, tf := range brain.CategoriesSummary[category].Tfs[feature] {
 				tfIdfSum += math.Log1p(tf) * math.Log1p(float64(brain.LearnedCount)/float64(brain.CategoriesSummary[category].LearnedCount))
 			}
-			if brain.TfIdfTempValues[category] == nil {
-				brain.TfIdfTempValues[category] = make(map[string]float64)
-			}
 			brain.TfIdfTempValues[category][feature] = tfIdfSum
-			fmt.Println("category ",category," feature ",feature, " ",tfIdfSum)
-
+			//brain.TfIdfTempValues[category][feature] *=  brain.FeaturesFrequencyInEachCategory[category][feature]
 		}
 
 	}
@@ -84,6 +81,7 @@ func (brain *BayesBrain) Learn(category string, features ...string) {
 	if brain.CategoriesSummary[category] == nil {
 		brain.CategoriesSummary[category] =  new(CategorySummary)
 		brain.CategoriesSummary[category].Tfs = make(map[string][]float64)
+		brain.CategoriesSummary[category].LearnedCount = 0
 	}
 	brain.CategoriesSummary[category].LearnedCount++
 
