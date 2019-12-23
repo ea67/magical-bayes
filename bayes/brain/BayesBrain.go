@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-var VERSION = "v0.0.2"
+var VERSION = "v0.0.3"
 
 type BayesBrain struct {
 	FeaturesFrequency               map[string]float64
@@ -57,7 +57,8 @@ func (brain *BayesBrain) ApplyTfIdf() {
 		for feature := range brain.CategoriesSummary[category].Tfs {
 			tfIdfSum := float64(0)
 			for _, tf := range brain.CategoriesSummary[category].Tfs[feature] {
-				tfIdfSum += math.Log1p(tf) * math.Log1p(float64(brain.LearnedCount)/float64(brain.CategoriesSummary[category].LearnedCount))
+				//tfIdfSum += math.Log1p(tf) * math.Log1p(float64(brain.LearnedCount)/float64(brain.CategoriesSummary[category].LearnedCount))
+				tfIdfSum += math.Log1p(tf) * math.Log1p(float64(brain.LearnedCount)/float64(len(brain.CategoriesSummary[category].Tfs[feature])))
 			}
 			brain.TfIdfTempValues[category][feature] = tfIdfSum
 			//brain.TfIdfTempValues[category][feature] *=  brain.FeaturesFrequencyInEachCategory[category][feature]
