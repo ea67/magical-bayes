@@ -1,9 +1,12 @@
 package classifier
 
-import "magicalbayes/bayes/brain"
+import (
+	"magicalbayes/bayes/brain"
+)
 
 var VERSION = "1.0.0"
 var λ = 1 //平滑因子
+var K = 1e3
 
 // defaultProb is the tiny non-zero probability that a word
 // we have not seen before appears in the class.
@@ -47,7 +50,7 @@ func (classifier *BayesClassifier) probabilityOfCategory(category string) float6
 
 //P(feature|category)
 func (classifier *BayesClassifier) probabilityOfFeatureInCategory( feature, category string) float64 {
-	return classifier.probabilityOf(feature,  classifier.Brain.FeaturesFrequencyInEachCategory[category])
+	return classifier.probabilityOf(feature,  classifier.Brain.TfIdfTempValues[category])
 }
 
 func getSampleSpaceSize(typeFrequency map[string]int) int {
@@ -85,9 +88,7 @@ func (classifier *BayesClassifier) MolecularProbabilityOf(features ...string)  [
 
 		for _, feature := range features {
 			inCategory := classifier.probabilityOfFeatureInCategory(feature, category)
-
-			P *= inCategory
-			//fmt.Println("P",P)
+			P *= inCategory * K
 		}
 		list[i] = Classification {
 			Probability: P,
@@ -122,7 +123,7 @@ func (classifier *BayesClassifier) Classify(features ...string) string {
 	for category := range classifier.Brain.CategoriesFrequency {
 		P := classifier.probabilityOfCategory(category)
 		for _, feature := range features {
-			P *= classifier.probabilityOfFeatureInCategory(feature, category)
+			P *= classifier.probabilityOfFeatureInCategory(feature, category) * K
 		}
 		if P > maxProbability {
 			maxProbability = P
