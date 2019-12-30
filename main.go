@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/jbrukh/bayesian"
 	"magicalbayes/bayes/brain"
 	"magicalbayes/bayes/classifier"
 )
@@ -18,17 +17,12 @@ func test0()  {
 	bayesClassifier := classifier.BayesClassifier{Brain: bayesBrain}
 	bayesBrain.Show()
 
-	err := bayesBrain.Load("/Users/liumingxing/go/src/magicalbayes/db")
-	if err!= nil{
-		panic(err)
-	}
-	//
-	//bayesBrain.Learn("Chinese", "Chinese", "Beijing", "Chinese")
-	//fmt.Println(bayesBrain.CategoriesSummary["Chinese"],",,,,,,,,")
-	//bayesBrain.Learn("Chinese", "Chinese", "Chinese", "Shanghai")
-	//fmt.Println(bayesBrain.CategoriesSummary["Chinese"],",,,,,,,,")
-	//bayesBrain.Learn("Chinese", "Chinese", "Macao")
-	//bayesBrain.Learn("Not Chinese", "Tokyo", "Japan", "Chinese")
+	bayesBrain.Learn("Chinese", "Chinese", "Beijing", "Chinese")
+	fmt.Println(bayesBrain.CategoriesSummary["Chinese"])
+	bayesBrain.Learn("Chinese", "Chinese", "Chinese", "Shanghai")
+	fmt.Println(bayesBrain.CategoriesSummary["Chinese"])
+	bayesBrain.Learn("Chinese", "Chinese", "Macao")
+	bayesBrain.Learn("Not Chinese", "Tokyo", "Japan", "Chinese")
 
 	bayesBrain.Show()
 	bayesBrain.ApplyTfIdf()
@@ -43,33 +37,9 @@ func test0()  {
 
 	fmt.Println(bayesClassifier.Classify(features...))
 
-	//err2 := bayesBrain.Save("/Users/liumingxing/go/src/magicalbayes/db")
-	//if err2!= nil {
-	//	panic(err2)
-	//
-	//}
 
-	return
-	c := bayesian.NewClassifierTfIdf(Good, Bad)
-
-	c.Learn([]string{"tall", "handsome", "rich"}, Good)
-	c.Learn([]string{"tall", "blonde"}, Good)
-	c.Learn([]string{"tall"}, Good)
-	c.Learn([]string{"fat"}, Bad)
-	c.Learn([]string{"short", "poor"}, Bad)
-
-
-	c.ConvertTermsFreqToTfIdf()
-
-	score, likely, strict := c.LogScores([]string{"the", "tall", "man"})
-	fmt.Printf("%#v", score)
-	fmt.Printf("%#v", likely)
-	fmt.Printf("%#v", strict)
 }
-const (
-	Good bayesian.Class = "good"
-	Bad  bayesian.Class = "bad"
-)
+
 
 
 //category  Chinese  feature  Chinese   1.209192634657479
